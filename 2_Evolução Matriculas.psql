@@ -1,0 +1,71 @@
+-- Evolução de Matriculas ao longo dos anos
+/*
+VARIÁVEIS DERIVADAS						
+92	QT_MATRICULA_CURSO	Número de matrículas no curso	Num	8	Cálculo de matricula (soma do número de alunos com situação de vinculo ao curso igual a: 2.Cursando/a e 6. Formado/a )	
+
+*/
+
+
+
+use queroed;
+
+EXPLAIN ANALYZE
+
+select 2009 as ano, Sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2009 union all
+select 2010 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2010 union all
+select 2011 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2011 union all
+select 2012 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2012 union all
+select 2013 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2013 union all
+select 2014 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2014 union all
+select 2015 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2015 union all
+select 2016 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2016
+
+ORDER BY 1;
+
+
+/* RESULTS OF EXPLAIN ANALYZE
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ Gather Merge  (cost=14567.04..14567.28 rows=2 width=12) (actual time=393.049..393.229 rows=8 loops=1)
+   Workers Planned: 2
+   Workers Launched: 2
+   ->  Sort  (cost=13567.02..13567.02 rows=1 width=12) (actual time=345.350..345.351 rows=3 loops=3)
+         Sort Key: (2009)
+         Sort Method: quicksort  Memory: 25kB
+         Worker 0:  Sort Method: quicksort  Memory: 25kB
+         Worker 1:  Sort Method: quicksort  Memory: 25kB
+         ->  Parallel Append  (cost=3266.69..13567.01 rows=1 width=12) (actual time=132.030..344.620 rows=3 loops=3)
+               ->  Aggregate  (cost=5186.65..5186.66 rows=1 width=12) (actual time=196.507..196.507 rows=1 loops=1)
+                     ->  Seq Scan on dm_curso_2009  (cost=0.00..5028.72 rows=63172 width=4) (actual time=0.127..86.204 rows=63172 loops=1)
+               ->  Aggregate  (cost=3266.69..3266.70 rows=1 width=12) (actual time=144.900..144.900 rows=1 loops=1)
+                     ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=4) (actual time=0.037..69.895 rows=34695 loops=1)
+               ->  Aggregate  (cost=3164.41..3164.42 rows=1 width=12) (actual time=127.210..127.210 rows=1 loops=1)
+                     ->  Seq Scan on dm_curso_2015  (cost=0.00..3079.73 rows=33873 width=4) (actual time=0.040..62.050 rows=33873 loops=1)
+               ->  Aggregate  (cost=3133.91..3133.92 rows=1 width=12) (actual time=174.273..174.274 rows=1 loops=1)
+                     ->  Seq Scan on dm_curso_2014  (cost=0.00..3050.73 rows=33273 width=4) (actual time=0.052..85.172 rows=33273 loops=1)
+               ->  Aggregate  (cost=2988.78..2988.79 rows=1 width=12) (actual time=141.688..141.689 rows=1 loops=1)
+                     ->  Seq Scan on dm_curso_2013  (cost=0.00..2907.82 rows=32382 width=4) (actual time=0.009..71.826 rows=32382 loops=1)
+               ->  Aggregate  (cost=2868.43..2868.44 rows=1 width=12) (actual time=96.563..96.563 rows=1 loops=1)
+                     ->  Seq Scan on dm_curso_2012  (cost=0.00..2787.94 rows=32194 width=4) (actual time=0.012..45.171 rows=32194 loops=1)
+               ->  Aggregate  (cost=2734.32..2734.34 rows=1 width=12) (actual time=98.020..98.020 rows=1 loops=1)
+                     ->  Seq Scan on dm_curso_2011  (cost=0.00..2657.46 rows=30746 width=4) (actual time=0.029..26.290 rows=30746 loops=1)
+               ->  Aggregate  (cost=2377.94..2377.95 rows=1 width=12) (actual time=54.679..54.679 rows=1 loops=1)
+                     ->  Seq Scan on dm_curso_2010  (cost=0.00..2303.35 rows=29835 width=4) (actual time=0.012..15.135 rows=29835 loops=1)
+ Planning Time: 0.412 ms
+ Execution Time: 393.462 ms
+(27 rows)
+
+
+
+*/
+
+
+
+
+-- Criação de índices para a tabela dm_curso_2016
+
+
+
+
+
+

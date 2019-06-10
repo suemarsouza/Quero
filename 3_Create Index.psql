@@ -1,0 +1,323 @@
+
+
+-- QUERY PARA CRIAR INDÍCES PARA TODAS AS COLUNAS
+
+SELECT 'CREATE INDEX ' || table_name || '_' || column_name || ' ON ' || table_name || ' ("' || column_name || '");' 
+FROM information_schema.columns
+WHERE table_name = 'DM_CURSO_2016';
+
+ 
+/* INDICES BASEADOS NAS PRINCIPAIS DIMENSÕES: Tempo, Localização, Instituição de Ensino e Detalhes do Curso */
+
+CREATE INDEX dm_curso_2016_co_ies ON dm_curso_2016 ("co_ies");
+
+CREATE INDEX dm_curso_2016_co_uf_municipio_curso ON dm_curso_2016 ("co_uf_curso","co_municipio_curso");
+
+
+CREATE INDEX dm_curso_2016_co_curso ON dm_curso_2016 ("co_curso");
+CREATE INDEX dm_curso_2016_co_ocde ON dm_curso_2016 ("co_ocde");
+CREATE INDEX dm_curso_2016_co_grau_academico ON dm_curso_2016 ("co_grau_academico");
+
+-- Índice abaixo descartado por ser a data de inicio de funcionamento do curso na ies e não do curso junto à Quero.
+-- CREATE INDEX dm_curso_2016_dt_inicio_funcionamento ON dm_curso_2016 ("dt_inicio_funcionamento");
+
+EXPLAIN ANALYZE
+SELECT no_ies, no_curso, no_municipio_curso, no_ocde_area_geral,  dt_inicio_funcionamento
+ from dm_curso_2016 limit 10;
+
+queroed=# EXPLAIN ANALYZE
+queroed-# SELECT co_ies, count(*)
+queroed-#  from dm_curso_2016
+queroed-# group by co_ies;
+                                                       QUERY PLAN                                                        
+-------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3353.43..3377.00 rows=2357 width=16) (actual time=58.139..58.984 rows=2407 loops=1)
+   Group Key: co_ies
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=8) (actual time=0.010..38.328 rows=34695 loops=1)
+ Planning Time: 0.195 ms
+ Execution Time: 59.310 ms
+(5 rows)
+
+CREATE INDEX dm_curso_2016_co_ies ON dm_curso_2016 ("co_ies");
+
+queroed=# EXPLAIN ANALYZE                                               
+SELECT co_ies, count(*)
+ from dm_curso_2016
+group by co_ies;
+                                                       QUERY PLAN                                                       
+------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3353.43..3377.00 rows=2357 width=16) (actual time=22.470..23.259 rows=2407 loops=1)
+   Group Key: co_ies
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=8) (actual time=0.009..9.810 rows=34695 loops=1)
+ Planning Time: 0.263 ms
+ Execution Time: 23.500 ms
+(5 rows)
+
+
+=============
+
+queroed=# EXPLAIN ANALYZE                                               
+queroed-# SELECT co_curso, count(*)
+queroed-#  from dm_curso_2016
+queroed-# group by co_curso;
+                                                       QUERY PLAN                                                        
+-------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3353.43..3700.38 rows=34695 width=16) (actual time=76.693..97.686 rows=34695 loops=1)
+   Group Key: co_curso
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=8) (actual time=0.012..28.586 rows=34695 loops=1)
+ Planning Time: 0.092 ms
+ Execution Time: 103.646 ms
+(5 rows)
+
+queroed=# CREATE INDEX dm_curso_2016_co_curso ON dm_curso_2016 ("co_curso");
+CREATE INDEX
+queroed=# EXPLAIN ANALYZE                                               
+SELECT co_curso, count(*)
+ from dm_curso_2016
+group by co_curso;
+                                                       QUERY PLAN                                                        
+-------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3353.43..3700.38 rows=34695 width=16) (actual time=45.505..59.191 rows=34695 loops=1)
+   Group Key: co_curso
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=8) (actual time=0.009..11.648 rows=34695 loops=1)
+ Planning Time: 0.234 ms
+ Execution Time: 63.126 ms
+(5 rows)
+
+=================== LOCALIZAÇÃO ==========================
+
+queroed=# EXPLAIN ANALYZE
+queroed-# select co_uf_curso
+queroed-#      , co_municipio_curso
+queroed-#      , count(*)
+queroed-#   from dm_curso_2016
+queroed-# GROUP BY co_uf_curso
+queroed-#      , co_municipio_curso;
+                                                       QUERY PLAN                                                        
+-------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3440.16..3474.86 rows=3470 width=24) (actual time=25.833..26.050 rows=1155 loops=1)
+   Group Key: co_uf_curso, co_municipio_curso
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=16) (actual time=0.008..8.032 rows=34695 loops=1)
+ Planning Time: 0.093 ms
+ Execution Time: 26.148 ms
+(5 rows)
+
+queroed=# CREATE INDEX dm_curso_2016_co_uf_municipio_curso ON dm_curso_2016 ("co_uf_curso","co_municipio_curso");
+CREATE INDEX
+queroed=# 
+queroed=# 
+queroed=# EXPLAIN ANALYZE                                                                                        
+select co_uf_curso
+     , co_municipio_curso
+     , count(*)
+  from dm_curso_2016
+GROUP BY co_uf_curso
+     , co_municipio_curso;
+                                                       QUERY PLAN                                                        
+-------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3440.16..3474.86 rows=3470 width=24) (actual time=32.278..32.585 rows=1155 loops=1)
+   Group Key: co_uf_curso, co_municipio_curso
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=16) (actual time=0.008..9.513 rows=34695 loops=1)
+ Planning Time: 0.270 ms
+ Execution Time: 32.707 ms
+(5 rows)
+
+queroed=# EXPLAIN ANALYZE
+select co_uf_curso
+     , co_municipio_curso
+     , count(*)
+  from dm_curso_2016
+GROUP BY co_uf_curso
+     , co_municipio_curso;
+                                                        QUERY PLAN                                                        
+--------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3440.16..3474.86 rows=3470 width=24) (actual time=32.422..32.980 rows=1155 loops=1)
+   Group Key: co_uf_curso, co_municipio_curso
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=16) (actual time=0.005..10.710 rows=34695 loops=1)
+ Planning Time: 0.097 ms
+ Execution Time: 33.162 ms
+(5 rows)
+
+queroed=# DROP INDEX INDEX dm_curso_2016_co_uf_municipio_curso;
+ERROR:  syntax error at or near "dm_curso_2016_co_uf_municipio_curso"
+LINE 1: DROP INDEX INDEX dm_curso_2016_co_uf_municipio_curso;
+                         ^
+queroed=# 
+queroed=# DROP INDEX INDEX dm_curso_2016_co_uf_municipio_curso ON dm_curso_2016;
+ERROR:  syntax error at or near "dm_curso_2016_co_uf_municipio_curso"
+LINE 1: DROP INDEX INDEX dm_curso_2016_co_uf_municipio_curso ON dm_c...
+                         ^
+queroed=# DROP INDEX dm_curso_2016_co_uf_municipio_curso;
+DROP INDEX
+queroed=# 
+queroed=# 
+queroed=# CREATE INDEX dm_curso_2016_co_uf_curso ON dm_curso_2016 ("co_uf_curso");
+CREATE INDEX
+queroed=# CREATE INDEX dm_curso_2016_co_municipio_curso ON dm_curso_2016 ("co_municipio_curso");
+CREATE INDEX
+queroed=# 
+queroed=# 
+queroed=# EXPLAIN ANALYZE                                      
+select co_uf_curso
+     , co_municipio_curso
+     , count(*)
+  from dm_curso_2016
+GROUP BY co_uf_curso
+     , co_municipio_curso;
+                                                        QUERY PLAN                                                        
+--------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3440.16..3474.86 rows=3470 width=24) (actual time=52.841..53.273 rows=1155 loops=1)
+   Group Key: co_uf_curso, co_municipio_curso
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=16) (actual time=0.009..20.682 rows=34695 loops=1)
+ Planning Time: 0.371 ms
+ Execution Time: 53.434 ms
+(5 rows)
+
+queroed=# DROP INDEX dm_curso_2016_co_municipio_curso
+queroed-# ;
+DROP INDEX
+queroed=# EXPLAIN ANALYZE                                                                       
+select co_uf_curso
+     , co_municipio_curso
+     , count(*)
+  from dm_curso_2016
+GROUP BY co_uf_curso
+     , co_municipio_curso;
+                                                        QUERY PLAN                                                        
+--------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3440.16..3474.86 rows=3470 width=24) (actual time=51.423..51.991 rows=1155 loops=1)
+   Group Key: co_uf_curso, co_municipio_curso
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=16) (actual time=0.010..12.110 rows=34695 loops=1)
+ Planning Time: 0.192 ms
+ Execution Time: 52.187 ms
+(5 rows)
+
+queroed=# DROP INDEX dm_curso_2016_co_uf_curso
+queroed-# ;
+DROP INDEX
+queroed=# 
+queroed=# EXPLAIN ANALYZE
+select co_uf_curso
+     , co_municipio_curso
+     , count(*)
+  from dm_curso_2016
+GROUP BY co_uf_curso
+     , co_municipio_curso;
+                                                        QUERY PLAN                                                        
+--------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=3440.16..3474.86 rows=3470 width=24) (actual time=35.418..35.645 rows=1155 loops=1)
+   Group Key: co_uf_curso, co_municipio_curso
+   ->  Seq Scan on dm_curso_2016  (cost=0.00..3179.95 rows=34695 width=16) (actual time=0.011..14.394 rows=34695 loops=1)
+ Planning Time: 0.163 ms
+ Execution Time: 35.806 ms
+(5 rows)
+
+
+
+
+
+
+
+
+
+===========================================================
+
+
+/* LIST OF COLUMNS */
+
+ co_ies , 
+ no_ies                , 
+ co_categoria_administrativa , 
+ ds_categoria_administrativa , 
+ co_organizacao_academica , 
+ ds_organizacao_academica , 
+ co_local_oferta_curso , 
+ co_municipio_curso , 
+ no_municipio_curso , 
+ co_uf_curso , 
+ sgl_uf_curso , 
+ no_regiao_curso , 
+ in_capital_curso , 
+ co_curso , 
+ no_curso       , 
+ co_situacao_curso , 
+ ds_situacao_curso , 
+ co_ocde , 
+ no_ocde        , 
+ co_ocde_area_geral , 
+ no_ocde_area_geral          , 
+ co_ocde_area_especifica , 
+ no_ocde_area_especifica            , 
+ co_ocde_area_detalhada , 
+ no_ocde_area_detalhada        , 
+ co_grau_academico , 
+ ds_grau_academico , 
+ co_modalidade_ensino , 
+ ds_modalidade_ensino , 
+ co_nivel_academico , 
+ ds_nivel_academico , 
+ in_gratuito , 
+ tp_atributo_ingresso , 
+ nu_carga_horaria , 
+ dt_inicio_funcionamento , 
+ dt_autorizacao_curso , 
+ in_ajuda_deficiente , 
+ in_material_digital , 
+ in_material_ampliado , 
+ in_material_tatil , 
+ in_material_impresso , 
+ in_material_audio , 
+ in_material_braille , 
+ in_material_libras , 
+ in_disciplina_libras , 
+ in_tradutor_libras , 
+ in_guia_interprete , 
+ in_recursos_comunicacao , 
+ in_recursos_informatica , 
+ in_integral_curso , 
+ in_matutino_curso , 
+ in_vespertino_curso , 
+ in_noturno_curso , 
+ nu_integralizacao_integral , 
+ nu_integralizacao_matutino , 
+ nu_integralizacao_vespertino , 
+ nu_integralizacao_noturno , 
+ nu_integralizacao_ead , 
+ in_oferece_disc_semi_pres , 
+ nu_perc_car_hor_semi_pres , 
+ in_possui_laboratorio , 
+ qt_insc_vagas_novas_int , 
+ qt_insc_vagas_novas_mat , 
+ qt_insc_vagas_novas_vesp , 
+ qt_insc_vagas_novas_not , 
+ qt_insc_vagas_novas_ead , 
+ qt_insc_vagas_reman_int , 
+ qt_insc_vagas_reman_mat , 
+ qt_insc_vagas_reman_vesp , 
+ qt_insc_vagas_reman_not , 
+ qt_insc_vagas_reman_ead , 
+ qt_insc_vagas_prog_esp_int , 
+ qt_insc_vagas_prog_esp_mat , 
+ qt_insc_vagas_prog_esp_vesp , 
+ qt_insc_vagas_prog_esp_not , 
+ qt_insc_vagas_prog_esp_ead , 
+ qt_vagas_novas_integral , 
+ qt_vagas_novas_matutino , 
+ qt_vagas_novas_vespertino , 
+ qt_vagas_novas_noturno , 
+ qt_vagas_novas_ead , 
+ qt_vagas_remanesc_integral , 
+ qt_vagas_remanesc_matutino , 
+ qt_vagas_remanesc_vespertino , 
+ qt_vagas_remanesc_noturno , 
+ qt_vagas_remanesc_ead , 
+ qt_vagas_prog_esp_integral , 
+ qt_vagas_prog_esp_matutino , 
+ qt_vagas_prog_esp_vespertino , 
+ qt_vagas_prog_esp_noturno , 
+ qt_vagas_prog_esp_ead , 
+ qt_matricula_curso , 
+ qt_concluinte_curso , 
+ qt_ingresso_curso , 
+ qt_ingresso_vagas_novas , 
+ qt_vagas_totais
