@@ -59,11 +59,35 @@ ORDER BY 1;
 
 */
 
+-- MÉDIA MÓVEL 
 
-
-
--- Criação de índices para a tabela dm_curso_2016
-
+postgres=# with Medias_historicas as (
+select 2009 as ano, Sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2009 union all
+select 2010 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2010 union all
+select 2011 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2011 union all
+select 2012 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2012 union all
+select 2013 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2013 union all
+select 2014 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2014 union all
+select 2015 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2015 union all
+select 2016 as ano, sum(QT_MATRICULA_CURSO) as qtd_matriculas from dm_curso_2016
+) 
+select ano
+    , qtd_matriculas
+    , avg(qtd_matriculas) OVER (PARTITION BY 1 ORDER BY ano
+                      ROWS BETWEEN 1 PRECEDING AND 0 FOLLOWING)                          
+from Medias_historicas
+;
+ ano  | qtd_matriculas |         avg          
+------+----------------+----------------------
+ 2009 |        5985873 | 5985873.000000000000
+ 2010 |        6407733 | 6196803.000000000000
+ 2011 |        6765540 | 6586636.500000000000
+ 2012 |        7058084 | 6911812.000000000000
+ 2013 |        7322964 | 7190524.000000000000
+ 2014 |        7839765 | 7581364.500000000000
+ 2015 |        8033574 | 7936669.500000000000
+ 2016 |        8052254 | 8042914.000000000000
+(8 rows)
 
 
 
